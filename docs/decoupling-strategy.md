@@ -32,9 +32,11 @@ This document outlines a comprehensive strategy for decoupling the OpenHands ent
 ```python
 # openhands/server/extensions.py
 import os
-import pkg_resources
+from importlib import metadata
 from typing import List, Callable
 from fastapi import FastAPI
+from openhands.utils.import_utils import import_from
+from openhands.utils.logger import openhands_logger as logger
 
 def load_extensions(app: FastAPI) -> List[str]:
     """Load and register all available extensions"""
@@ -52,13 +54,13 @@ def load_extensions(app: FastAPI) -> List[str]:
                 logger.warning(f"Failed to load extension {ext}: {e}")
     
     # Entry point discovery (for production)
-    for entry_point in pkg_resources.iter_entry_points('openhands_server_extensions'):
+    for ep in metadata.entry_points(group='openhands_server_extensions'):
         try:
-            register_func = entry_point.load()
+            register_func = ep.load()
             register_func(app)
-            loaded_extensions.append(entry_point.name)
+            loaded_extensions.append(ep.name)
         except Exception as e:
-            logger.warning(f"Failed to load extension {entry_point.name}: {e}")
+            logger.warning(f"Failed to load extension {ep.name}: {e}")
     
     return loaded_extensions
 ```
@@ -192,7 +194,7 @@ class MultiUserContext(UserContext):
 ```python
 # openhands/storage/interfaces.py
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from openhands.server.user_context import UserContext
 from openhands.core.config import OpenHandsConfig
 
@@ -253,8 +255,9 @@ class ConversationStoreInterface(ABC):
 ```python
 # openhands/server/auth/interface.py
 from abc import ABC, abstractmethod
-from fastapi import Request
-from openhands.server.user_context import UserContext
+from typing import Optional
+from fastapi import Request, APIRouter
+from openhands.server.user_context import UserContext, SingleUserContext
 
 class AuthenticationInterface(ABC):
     """Abstract authentication interface"""

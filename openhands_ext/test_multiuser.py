@@ -5,9 +5,10 @@ This demonstrates how enterprise multi-user functionality could be
 implemented as a clean extension without modifying OpenHands core.
 """
 from typing import Optional
-from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi import APIRouter, Request, HTTPException, Depends, FastAPI
 from fastapi.security import HTTPBearer
 import jwt
+import os
 from datetime import datetime, timedelta
 
 # Test extension router
@@ -20,8 +21,8 @@ USERS = {
     "user2": {"id": "user2", "email": "user2@example.com", "plan": "pro"},
 }
 
-# JWT secret (enterprise would use proper key management)
-JWT_SECRET = "test-secret-key"
+# JWT secret (demo: allow env override; default is dev-only)
+JWT_SECRET = os.getenv("TEST_EXTENSION_JWT_SECRET", "change-me-in-dev-only")
 
 class TestUserContext:
     """Simple user context for testing multi-user scenarios"""
@@ -119,7 +120,7 @@ async def get_billing_info(user: TestUserContext = Depends(get_current_user)):
             "billing_cycle": "monthly"
         }
 
-def register(app):
+def register(app: FastAPI):
     """Register the test multi-user extension"""
     app.include_router(router)
     print("TestExtension: Multi-user authentication demo registered")

@@ -5,10 +5,11 @@ This demonstrates how enterprise storage functionality could be
 implemented as a clean extension with proper tenant isolation.
 """
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, FastAPI
 from dataclasses import dataclass, asdict
 import json
 import os
+import re
 from pathlib import Path
 
 router = APIRouter(prefix="/test-storage")
@@ -32,12 +33,15 @@ class TestStorageManager:
     In enterprise, this would be a database with proper encryption
     """
     
-    def __init__(self, base_path: str = "/tmp/openhands-test-storage"):
+    def __init__(self, base_path: str = os.getenv("TEST_STORAGE_PATH", "/tmp/openhands-test-storage")):
         self.base_path = Path(base_path)
         self.base_path.mkdir(exist_ok=True)
     
     def _get_user_path(self, user_id: str) -> Path:
         """Get user-specific storage path (tenant isolation)"""
+        # Sanitize user_id to prevent path traversal attacks
+        if '..' in user_id or os.path.sep in user_id or not re.match(r'^[a-zA-Z0-9._-]+$', user_id):
+            raise ValueError("Invalid user_id, path traversal attempt detected.")
         user_path = self.base_path / f"user_{user_id}"
         user_path.mkdir(exist_ok=True)
         return user_path
@@ -197,7 +201,7 @@ async def storage_health():
         "writable": os.access(storage_manager.base_path, os.W_OK)
     }
 
-def register(app):
+def register(app: FastAPI):
     """Register the test storage extension"""
     app.include_router(router)
     print("TestExtension: Multi-tenant storage demo registered")
