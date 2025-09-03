@@ -12,5 +12,9 @@ dependencies = ["fastapi>=0.109"]
 [project.entry-points."openhands_server_extensions"]
 test-extension = "openhands_ext.ext:register"
 
+[project.entry-points."openhands_server_lifespans"]
+test-extension-lifespan = "openhands_ext.ext:lifespan"
+
 [project.entry-points."openhands_server_config"]
-default = "openhands_ext.config:TestServerConfig"
+# For demo only: prefer not to set this globally unless testing config override.
+# default = "openhands_ext.config:TestServerConfig"
