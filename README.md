@@ -3,11 +3,14 @@
 TestExtension for OpenHands: a minimal external extension to validate the OpenHands extension mechanism.
 
 Features:
-- Registers a router at `/test-extension` with a `/health` endpoint
+- Registers routers at `/test-extension` with endpoints:
+  - `/health` (public)
+  - `/secure-health` (requires X-Session-API-Key if configured in OH)
+- Provides an optional `lifespan(app)` to demonstrate startup/shutdown composition
 - Discoverable via either:
   - Env var: `OPENHANDS_EXTENSIONS="openhands_ext.ext:register"`
   - Entry point: `openhands_server_extensions` (see `pyproject.toml`)
-- Optional custom `ServerConfig` via `openhands_server_config` entry point
+- Optional custom `ServerConfig` via `openhands_server_config` entry point (demo/stub only)
 
 Usage
 1) Install into the same Python environment as OpenHands:

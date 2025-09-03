@@ -12,5 +12,18 @@ dependencies = ["fastapi>=0.109"]
 [project.entry-points."openhands_server_extensions"]
 test-extension = "openhands_ext.ext:register"
 
+[project.entry-points."openhands_server_lifespans"]
+test-extension-lifespan = "openhands_ext.ext:lifespan"
+
+[project.entry-points."openhands_components"]
+# Demo component contribution; OH loader will be extended to read this.
+test-extension-components = "openhands_ext.contrib:get_test_contribution"
+
 [project.entry-points."openhands_server_config"]
-default = "openhands_ext.config:TestServerConfig"
+# For demo only: prefer not to set this globally unless testing config override.
+# default = "openhands_ext.config:TestServerConfig"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
+
