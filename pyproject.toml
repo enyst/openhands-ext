@@ -22,3 +22,8 @@ test-extension-components = "openhands_ext.contrib:get_test_contribution"
 [project.entry-points."openhands_server_config"]
 # For demo only: prefer not to set this globally unless testing config override.
 # default = "openhands_ext.config:TestServerConfig"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
+

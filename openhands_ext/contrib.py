@@ -23,4 +23,4 @@ def get_test_contribution() -> ComponentContribution:
     def _ctx_probe():
         return {"ok": True}
 
-    return ComponentContribution(routers=[("/", router)], conversation_manager_name="TestConversationManager")
+    return ComponentContribution(routers=[("", router)], conversation_manager_name="TestConversationManager")
