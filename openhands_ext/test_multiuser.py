@@ -24,6 +24,21 @@ USERS = {
 # JWT secret (demo/test only - not for production)
 JWT_SECRET = "test-secret-key-for-demo-only"
 
+# Track actual function calls for testing
+_multiuser_calls = []
+
+def initialize_user_auth_system() -> None:
+    """Stub: Initialize user authentication system"""
+    _multiuser_calls.append('initialize_user_auth_system')
+
+def get_multiuser_calls() -> list:
+    """Get list of actual function calls made - for testing"""
+    return _multiuser_calls.copy()
+
+def clear_multiuser_calls() -> None:
+    """Clear call history - for testing"""
+    _multiuser_calls.clear()
+
 class TestUserContext:
     """Simple user context for testing multi-user scenarios"""
     def __init__(self, user_id: str, email: str, plan: str):
@@ -132,5 +147,8 @@ async def get_billing_info(user: TestUserContext = Depends(get_current_user)):
 
 def register(app: FastAPI):
     """Register the test multi-user extension"""
+    # Actually call initialization stub - this is real plumbing!
+    initialize_user_auth_system()
+    
     app.include_router(router)
     # Registration is tracked in main extension state

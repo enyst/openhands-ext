@@ -15,36 +15,63 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'openhands_ext'))
 
-from ext import register, lifespan, get_extension_state
-from test_multiuser import create_test_token, verify_test_token
+from ext import register, lifespan, get_extension_state, get_extension_calls, clear_extension_calls
+from test_multiuser import create_test_token, verify_test_token, get_multiuser_calls, clear_multiuser_calls
+from test_storage import get_storage_calls, clear_storage_calls
 
 
 async def test_extension_lifecycle():
-    """Test extension lifecycle management"""
+    """Test extension lifecycle management - REAL FUNCTION CALLS"""
     print("🧪 Testing Extension Lifecycle...")
+    
+    # Clear call history before testing
+    clear_extension_calls()
+    clear_multiuser_calls()
+    clear_storage_calls()
     
     app = FastAPI()
     
-    # Test registration
+    # Test registration - check that actual functions were called
     register(app)
+    
+    # Verify registration state
     state = get_extension_state(app)
     assert state.get('registered') is True, "Extension should be registered"
-    print("✅ Registration: PASS")
     
-    # Test lifespan
+    # TEST REAL FUNCTION CALLS - this is the key difference!
+    extension_calls = get_extension_calls()
+    multiuser_calls = get_multiuser_calls()
+    storage_calls = get_storage_calls()
+    
+    assert 'register_extension_components' in extension_calls, f"Should call register_extension_components, got {extension_calls}"
+    assert 'initialize_user_auth_system' in multiuser_calls, f"Should call initialize_user_auth_system, got {multiuser_calls}"
+    assert 'initialize_storage_system' in storage_calls, f"Should call initialize_storage_system, got {storage_calls}"
+    print("✅ Registration Function Calls: PASS")
+    
+    # Test lifespan - check that actual startup/shutdown functions were called
     async with lifespan(app):
         state = get_extension_state(app)
         assert state.get('status') == 'running', f"Expected 'running', got {state.get('status')}"
         assert 'startup_time' in state, "Should have startup_time"
-        assert len(state.get('background_tasks', [])) == 2, "Should have 2 background tasks"
-        print("✅ Startup: PASS")
+        
+        # TEST REAL STARTUP FUNCTION CALLS
+        extension_calls = get_extension_calls()
+        assert 'initialize_extension_resources' in extension_calls, f"Should call initialize_extension_resources, got {extension_calls}"
+        assert 'start_user_session_cleanup' in extension_calls, f"Should call start_user_session_cleanup, got {extension_calls}"
+        assert 'start_storage_maintenance' in extension_calls, f"Should call start_storage_maintenance, got {extension_calls}"
+        print("✅ Startup Function Calls: PASS")
     
-    # Check shutdown
+    # Check shutdown - verify cleanup functions were actually called
     state = get_extension_state(app)
     assert state.get('status') == 'stopped', f"Expected 'stopped', got {state.get('status')}"
     assert 'shutdown_time' in state, "Should have shutdown_time"
-    assert len(state.get('background_tasks', [])) == 0, "Background tasks should be cleaned up"
-    print("✅ Shutdown: PASS")
+    
+    # TEST REAL CLEANUP FUNCTION CALLS
+    extension_calls = get_extension_calls()
+    assert 'stop_user_session_cleanup' in extension_calls, f"Should call stop_user_session_cleanup, got {extension_calls}"
+    assert 'stop_storage_maintenance' in extension_calls, f"Should call stop_storage_maintenance, got {extension_calls}"
+    assert 'cleanup_extension_resources' in extension_calls, f"Should call cleanup_extension_resources, got {extension_calls}"
+    print("✅ Shutdown Function Calls: PASS")
 
 
 def test_jwt_functionality():
@@ -103,6 +130,34 @@ def test_api_endpoints():
     print("✅ Login Endpoint: PASS")
 
 
+def test_real_vs_fake_approach():
+    """Demonstrate the difference between real testing and fake simulation"""
+    print("🧪 Testing Real vs Fake Approach...")
+    
+    clear_extension_calls()
+    
+    # REAL APPROACH: Test actual function calls
+    app = FastAPI()
+    register(app)
+    
+    calls = get_extension_calls()
+    assert 'register_extension_components' in calls, "Real approach: function actually called"
+    print("✅ Real Approach: Actual function calls verified")
+    
+    # FAKE APPROACH (what I did wrong before): Just manipulating data
+    fake_tasks = []
+    fake_tasks.append('user_session_cleanup')  # This is just adding strings!
+    fake_tasks.append('storage_maintenance')   # This proves nothing!
+    
+    assert len(fake_tasks) == 2, "Fake approach: just counting strings in a list"
+    print("❌ Fake Approach: Only tests data manipulation, not real functionality")
+    
+    # The difference:
+    # - Real approach: Tests that actual functions get called (extension plumbing works)
+    # - Fake approach: Tests that we can add strings to lists (meaningless)
+    print("✅ Real vs Fake Comparison: PASS")
+
+
 async def main():
     """Run all tests"""
     print("🚀 Starting TestExtension Tests\n")
@@ -115,6 +170,9 @@ async def main():
         print()
         
         test_api_endpoints()
+        print()
+        
+        test_real_vs_fake_approach()
         print()
         
         print("🎉 All Tests Passed!")

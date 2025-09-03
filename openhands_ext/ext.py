@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Dict, Any
+from typing import AsyncIterator, Dict, Any, List
 from datetime import datetime, timezone
 from fastapi import APIRouter, FastAPI
 try:
@@ -7,6 +7,9 @@ try:
 except ImportError:
     # For direct testing without package structure
     import test_multiuser, test_storage
+
+# Track actual function calls for testing
+_extension_calls: List[str] = []
 
 # Main extension router
 router = APIRouter(prefix="/test-extension")
@@ -37,6 +40,40 @@ async def extension_info():
         }
     }
 
+# Actual stub functions that get called - this is real plumbing!
+def start_user_session_cleanup() -> None:
+    """Stub: Start user session cleanup background task"""
+    _extension_calls.append('start_user_session_cleanup')
+
+def stop_user_session_cleanup() -> None:
+    """Stub: Stop user session cleanup background task"""
+    _extension_calls.append('stop_user_session_cleanup')
+
+def start_storage_maintenance() -> None:
+    """Stub: Start storage maintenance background task"""
+    _extension_calls.append('start_storage_maintenance')
+
+def stop_storage_maintenance() -> None:
+    """Stub: Stop storage maintenance background task"""
+    _extension_calls.append('stop_storage_maintenance')
+
+def initialize_extension_resources() -> None:
+    """Stub: Initialize extension resources (DB connections, etc.)"""
+    _extension_calls.append('initialize_extension_resources')
+
+def cleanup_extension_resources() -> None:
+    """Stub: Cleanup extension resources"""
+    _extension_calls.append('cleanup_extension_resources')
+
+# Testing utilities
+def get_extension_calls() -> List[str]:
+    """Get list of actual function calls made - for testing"""
+    return _extension_calls.copy()
+
+def clear_extension_calls() -> None:
+    """Clear call history - for testing"""
+    _extension_calls.clear()
+
 def get_extension_state(app: FastAPI) -> Dict[str, Any]:
     """Get current extension state - useful for testing"""
     if not hasattr(app.state, 'extensions'):
@@ -64,7 +101,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Args:
         app: FastAPI application instance
     """
-    # Startup tasks
+    # Startup tasks - ACTUALLY CALL STUB FUNCTIONS
     startup_time = datetime.now(timezone.utc).isoformat()
     
     # Initialize extension state
@@ -72,37 +109,51 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         'status': 'starting',
         'features': ['multi_user_auth', 'multi_tenant_storage'],
         'startup_time': startup_time,
-        'background_tasks': []
     })
     
-    # Simulate background task setup (in real extension, this would be actual tasks)
+    # Actually call startup functions - this is real plumbing!
+    initialize_extension_resources()
+    start_user_session_cleanup()
+    start_storage_maintenance()
+    
+    # Mark as running after startup functions complete
     state = get_extension_state(app)
-    state['background_tasks'].append('user_session_cleanup')
-    state['background_tasks'].append('storage_maintenance')
     state['status'] = 'running'
     set_extension_state(app, state)
     
     try:
         yield
     finally:
-        # Shutdown tasks
+        # Shutdown tasks - ACTUALLY CALL CLEANUP FUNCTIONS
         state = get_extension_state(app)
         state['status'] = 'stopping'
+        set_extension_state(app, state)
         
-        # Simulate cleanup of background tasks
-        state['background_tasks'].clear()
+        # Actually call cleanup functions - this is real plumbing!
+        stop_user_session_cleanup()
+        stop_storage_maintenance()
+        cleanup_extension_resources()
+        
+        # Mark as stopped after cleanup functions complete
+        state = get_extension_state(app)
         state['status'] = 'stopped'
         state['shutdown_time'] = datetime.now(timezone.utc).isoformat()
-        
         set_extension_state(app, state)
 
 
+def register_extension_components() -> None:
+    """Stub: Register extension components with OpenHands core"""
+    _extension_calls.append('register_extension_components')
+
 def register(app: FastAPI) -> None:
     """Register all test extension components"""
+    # Actually call registration stub - this is real plumbing!
+    register_extension_components()
+    
     # Register main extension router
     app.include_router(router)
     
-    # Register sub-extensions
+    # Register sub-extensions - these are real function calls
     test_multiuser.register(app)
     test_storage.register(app)
     

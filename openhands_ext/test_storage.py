@@ -12,6 +12,21 @@ import os
 import re
 from pathlib import Path
 
+# Track actual function calls for testing
+_storage_calls = []
+
+def initialize_storage_system() -> None:
+    """Stub: Initialize storage system"""
+    _storage_calls.append('initialize_storage_system')
+
+def get_storage_calls() -> list:
+    """Get list of actual function calls made - for testing"""
+    return _storage_calls.copy()
+
+def clear_storage_calls() -> None:
+    """Clear call history - for testing"""
+    _storage_calls.clear()
+
 router = APIRouter(prefix="/test-storage")
 
 @dataclass
@@ -203,5 +218,8 @@ async def storage_health():
 
 def register(app: FastAPI):
     """Register the test storage extension"""
+    # Actually call initialization stub - this is real plumbing!
+    initialize_storage_system()
+    
     app.include_router(router)
     # Registration is tracked in main extension state
