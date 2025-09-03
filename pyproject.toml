@@ -16,5 +16,8 @@ dependencies = [
 [project.entry-points."openhands_server_extensions"]
 test-extension = "openhands_ext.ext:register"
 
+[project.entry-points."openhands_server_lifespans"]
+test-extension-lifespan = "openhands_ext.ext:lifespan"
+
 [project.entry-points."openhands_server_config"]
 default = "openhands_ext.config:TestServerConfig"
