@@ -27,9 +27,8 @@ def build_app(session_api_key: str | None = None) -> FastAPI:
 
     # Patch extension to use our test dependencies
     from openhands_ext import ext as test_ext
-    test_ext.secure_router = __import__("fastapi").fastapi.APIRouter(
-        prefix="/test-extension", dependencies=_get_deps()
-    )
+    from fastapi import APIRouter
+    test_ext.secure_router = APIRouter(prefix="/test-extension", dependencies=_get_deps())
 
     @test_ext.secure_router.get("/secure-health")
     async def secure_health():
