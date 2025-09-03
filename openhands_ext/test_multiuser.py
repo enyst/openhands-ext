@@ -2,7 +2,7 @@
 TestExtension: Multi-User Authentication Demo
 
 This demonstrates how enterprise multi-user functionality could be 
-implemented as a clean extension without modifying OSS core.
+implemented as a clean extension without modifying OpenHands core.
 """
 from typing import Optional
 from fastapi import APIRouter, Request, HTTPException, Depends

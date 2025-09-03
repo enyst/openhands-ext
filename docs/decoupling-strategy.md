@@ -2,32 +2,32 @@
 
 ## Executive Summary
 
-This document outlines a comprehensive strategy for decoupling the OpenHands enterprise functionality (`/enterprise`) into clean, maintainable extensions while preserving both the open-source core's simplicity and the enterprise platform's capabilities.
+This document outlines a comprehensive strategy for decoupling the OpenHands enterprise functionality (`/enterprise`) into clean, maintainable extensions while preserving both the OpenHands core's simplicity and the enterprise platform's capabilities.
 
 ## Current Architecture Problems
 
 ### 1. Tight Coupling Issues
 - **Dynamic Override Pattern**: Enterprise uses `OPENHANDS_CONFIG_CLS` to completely replace core components
-- **Import Dependencies**: Enterprise code directly imports and extends OSS internals
-- **Shared State**: Both OSS and enterprise share database models and storage systems
+- **Import Dependencies**: Enterprise code directly imports and extends OpenHands internals
+- **Shared State**: Both OpenHands and enterprise share database models and storage systems
 - **Configuration Complexity**: 50+ environment variables with complex conditional loading
 
 ### 2. Architectural Brittleness
-- **API Dependencies**: Enterprise relies on specific OSS internal APIs that could change
-- **Middleware Conflicts**: Stacking enterprise middleware on OSS can cause conflicts
+- **API Dependencies**: Enterprise relies on specific OpenHands internal APIs that could change
+- **Middleware Conflicts**: Stacking enterprise middleware on OpenHands can cause conflicts
 - **Monolithic Structure**: Single enterprise directory contains everything from auth to billing
 - **Testing Complexity**: Difficult to test enterprise features in isolation
 
 ### 3. Development Workflow Issues
-- **Deployment Coupling**: Enterprise deployment requires OSS codebase
-- **Version Synchronization**: Enterprise and OSS versions must be kept in sync
+- **Deployment Coupling**: Enterprise deployment requires OpenHands codebase
+- **Version Synchronization**: Enterprise and OpenHands versions must be kept in sync
 - **Development Environment**: Complex setup with multiple interdependent components
 
 ## Proposed Solution: Graduated Extension Architecture
 
 ### Phase 1: Extension Foundation (Immediate - 2-4 weeks)
 
-#### 1.1 Implement Extension Discovery in OpenHands OSS
+#### 1.1 Implement Extension Discovery in OpenHands
 
 ```python
 # openhands/server/extensions.py
@@ -147,7 +147,7 @@ class UserContext(ABC):
         pass
 
 class SingleUserContext(UserContext):
-    """Single-user context for OSS mode"""
+    """Single-user context for OpenHands mode"""
     
     def __init__(self):
         self._user_id = "default_user"
@@ -270,7 +270,7 @@ class AuthenticationInterface(ABC):
         pass
 
 class SingleUserAuth(AuthenticationInterface):
-    """Single-user authentication for OSS"""
+    """Single-user authentication for OpenHands"""
     
     async def authenticate(self, request: Request) -> UserContext:
         return SingleUserContext()
@@ -372,7 +372,7 @@ def register(app: FastAPI) -> None:
 
 #### 4.1 Gradual Migration Plan
 
-1. **Week 1-2**: Implement extension discovery in OSS
+1. **Week 1-2**: Implement extension discovery in OpenHands
 2. **Week 3-4**: Create basic interfaces and TestExtension
 3. **Week 5-8**: Migrate authentication system to interface
 4. **Week 9-12**: Migrate storage systems to interface
@@ -404,7 +404,7 @@ class LegacyConfigSupport:
 ## Benefits of This Approach
 
 ### 1. Clean Separation of Concerns
-- **OSS Core**: Remains simple, single-user focused
+- **OpenHands Core**: Remains simple, single-user focused
 - **Extensions**: Handle complex multi-user, enterprise features
 - **Interfaces**: Provide clean contracts between components
 
@@ -443,10 +443,10 @@ class LegacyConfigSupport:
 ## Success Metrics
 
 1. **Decoupling**: Enterprise functionality runs as independent extension
-2. **Maintainability**: OSS core remains simple and focused
+2. **Maintainability**: OpenHands core remains simple and focused
 3. **Extensibility**: New extensions can be added easily
 4. **Performance**: No significant performance degradation
-5. **Developer Experience**: Improved development workflow for both OSS and enterprise
+5. **Developer Experience**: Improved development workflow for both OpenHands and enterprise
 
 ## Conclusion
 
