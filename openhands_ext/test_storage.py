@@ -33,7 +33,7 @@ class TestStorageManager:
     In enterprise, this would be a database with proper encryption
     """
     
-    def __init__(self, base_path: str = os.getenv("TEST_STORAGE_PATH", "/tmp/openhands-test-storage")):
+    def __init__(self, base_path: str = "/tmp/openhands-test-storage"):
         self.base_path = Path(base_path)
         self.base_path.mkdir(exist_ok=True)
     
@@ -204,4 +204,4 @@ async def storage_health():
 def register(app: FastAPI):
     """Register the test storage extension"""
     app.include_router(router)
-    print("TestExtension: Multi-tenant storage demo registered")
+    # Registration is tracked in main extension state

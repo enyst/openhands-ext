@@ -1,7 +1,12 @@
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import AsyncIterator, Dict, Any
+from datetime import datetime, timezone
 from fastapi import APIRouter, FastAPI
-from . import test_multiuser, test_storage
+try:
+    from . import test_multiuser, test_storage
+except ImportError:
+    # For direct testing without package structure
+    import test_multiuser, test_storage
 
 # Main extension router
 router = APIRouter(prefix="/test-extension")
@@ -32,6 +37,18 @@ async def extension_info():
         }
     }
 
+def get_extension_state(app: FastAPI) -> Dict[str, Any]:
+    """Get current extension state - useful for testing"""
+    if not hasattr(app.state, 'extensions'):
+        return {}
+    return app.state.extensions.get('test_extension', {})
+
+def set_extension_state(app: FastAPI, state: Dict[str, Any]) -> None:
+    """Set extension state - useful for testing"""
+    if not hasattr(app.state, 'extensions'):
+        app.state.extensions = {}
+    app.state.extensions['test_extension'] = state
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
@@ -48,31 +65,36 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app: FastAPI application instance
     """
     # Startup tasks
-    print("🚀 TestExtension: Starting up...")
+    startup_time = datetime.now(timezone.utc).isoformat()
     
-    # Mark extension as started in app state (for demonstration)
-    if not hasattr(app.state, 'extensions'):
-        app.state.extensions = {}
-    app.state.extensions['test_extension'] = {
-        'status': 'running',
+    # Initialize extension state
+    set_extension_state(app, {
+        'status': 'starting',
         'features': ['multi_user_auth', 'multi_tenant_storage'],
-        'startup_time': '2025-09-03T20:30:00Z'
-    }
+        'startup_time': startup_time,
+        'background_tasks': []
+    })
     
-    # Simulate background task setup
-    print("📊 TestExtension: Background services initialized")
+    # Simulate background task setup (in real extension, this would be actual tasks)
+    state = get_extension_state(app)
+    state['background_tasks'].append('user_session_cleanup')
+    state['background_tasks'].append('storage_maintenance')
+    state['status'] = 'running'
+    set_extension_state(app, state)
     
     try:
         yield
     finally:
         # Shutdown tasks
-        print("🛑 TestExtension: Shutting down...")
+        state = get_extension_state(app)
+        state['status'] = 'stopping'
         
-        # Clean up app state
-        if hasattr(app.state, 'extensions') and 'test_extension' in app.state.extensions:
-            app.state.extensions['test_extension']['status'] = 'stopped'
+        # Simulate cleanup of background tasks
+        state['background_tasks'].clear()
+        state['status'] = 'stopped'
+        state['shutdown_time'] = datetime.now(timezone.utc).isoformat()
         
-        print("✅ TestExtension: Cleanup completed")
+        set_extension_state(app, state)
 
 
 def register(app: FastAPI) -> None:
@@ -84,4 +106,9 @@ def register(app: FastAPI) -> None:
     test_multiuser.register(app)
     test_storage.register(app)
     
-    print("TestExtension: All components registered successfully")
+    # Mark registration complete in state (testable)
+    if not hasattr(app.state, 'extensions'):
+        app.state.extensions = {}
+    if 'test_extension' not in app.state.extensions:
+        app.state.extensions['test_extension'] = {}
+    app.state.extensions['test_extension']['registered'] = True

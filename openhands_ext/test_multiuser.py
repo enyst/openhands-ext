@@ -21,8 +21,8 @@ USERS = {
     "user2": {"id": "user2", "email": "user2@example.com", "plan": "pro"},
 }
 
-# JWT secret (demo: allow env override; default is dev-only)
-JWT_SECRET = os.getenv("TEST_EXTENSION_JWT_SECRET", "change-me-in-dev-only")
+# JWT secret (demo/test only - not for production)
+JWT_SECRET = "test-secret-key-for-demo-only"
 
 class TestUserContext:
     """Simple user context for testing multi-user scenarios"""
@@ -33,17 +33,27 @@ class TestUserContext:
         self.is_authenticated = True
 
 def create_test_token(user_id: str) -> str:
-    """Create a test JWT token"""
+    """Create a test JWT token with proper claims"""
+    now = datetime.utcnow()
     payload = {
         "user_id": user_id,
-        "exp": datetime.utcnow() + timedelta(hours=24)
+        "exp": now + timedelta(hours=24),
+        "iat": now,
+        "iss": "test-extension",
+        "aud": "test-multiuser",
     }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 def verify_test_token(token: str) -> Optional[TestUserContext]:
     """Verify and decode test JWT token"""
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        payload = jwt.decode(
+            token,
+            JWT_SECRET,
+            algorithms=["HS256"],
+            audience="test-multiuser",
+            issuer="test-extension",
+        )
         user_id = payload.get("user_id")
         if user_id and user_id in USERS:
             user_data = USERS[user_id]
@@ -123,4 +133,4 @@ async def get_billing_info(user: TestUserContext = Depends(get_current_user)):
 def register(app: FastAPI):
     """Register the test multi-user extension"""
     app.include_router(router)
-    print("TestExtension: Multi-user authentication demo registered")
+    # Registration is tracked in main extension state
