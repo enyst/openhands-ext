@@ -40,6 +40,35 @@ curl http://localhost:3000/test-extension/health
 # {"status": "ok", "component": "TestExtension"}
 ```
 
-Notes
+## Testing
+
+The extension includes both simple test scripts and a full pytest suite:
+
+### Simple Test Script
+```bash
+python test_extension.py
+```
+
+### Pytest Suite
+```bash
+# Install test dependencies
+pip install -r requirements-test.txt
+
+# Run pytest suite
+pytest test_extension_pytest.py -v
+```
+
+The tests demonstrate:
+- **Real Function Calls**: Extension lifecycle actually calls stub functions (not fake simulation)
+- **JWT Functionality**: Token creation and validation with proper claims
+- **API Endpoints**: Health, info, and authentication endpoints
+- **Extension Plumbing**: Verification that extension registration and lifecycle work correctly
+
+### Key Testing Insight
+The tests verify **actual function calls** rather than just data manipulation:
+- ✅ **Real Testing**: `assert 'start_cleanup' in actual_function_calls`
+- ❌ **Fake Testing**: `assert len(string_list) == 2`  # meaningless!
+
+## Notes
 - This repo purposely avoids any multi-user/auth specifics. It is a simple, external extension that can be developed and run independently of OpenHands.
 - The legacy env var `OPENHANDS_CONFIG_CLS` is still honored by OpenHands for backward compatibility but may be removed later.
