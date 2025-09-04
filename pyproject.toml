@@ -7,10 +7,17 @@ name = "openhands-ext"
 version = "0.0.1"
 description = "Test extension for OpenHands"
 requires-python = ">=3.10"
-dependencies = ["fastapi>=0.109"]
+dependencies = [
+    "fastapi>=0.109",
+    "pyjwt>=2.8.0",
+    "python-multipart>=0.0.6"
+]
 
 [project.entry-points."openhands_server_extensions"]
 test-extension = "openhands_ext.ext:register"
+
+[project.entry-points."openhands_server_lifespans"]
+test-extension-lifespan = "openhands_ext.ext:lifespan"
 
 [project.entry-points."openhands_server_config"]
 default = "openhands_ext.config:TestServerConfig"
